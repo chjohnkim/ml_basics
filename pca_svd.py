@@ -102,7 +102,6 @@ def test_pca(X, y, labels=None):
     ax.grid(alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('pca_analysis.png', dpi=150, bbox_inches='tight')
     plt.show()
     
     # Print summary
