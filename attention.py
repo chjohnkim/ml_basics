@@ -3,11 +3,23 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
-
 class ScaledDotProductAttention(nn.Module):
     """
     Scaled Dot-Product Attention
-    Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) V
+    
+    Key Equations:
+    1. Attention scores: S = QK^T / sqrt(d_k)
+       where Q ∈ ℝ^(n×d_k), K ∈ ℝ^(m×d_k), S ∈ ℝ^(n×m)
+    
+    2. Attention weights: A = softmax(S)
+       where softmax is applied row-wise: A_ij = exp(S_ij) / Σ_j exp(S_ij)
+    
+    3. Output: O = AV
+       where V ∈ ℝ^(m×d_v), O ∈ ℝ^(n×d_v)
+    
+    Combined form: Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) V
+    
+    Optional masking: S_masked = S where mask==1, else -∞
     """
     def __init__(self, dropout=0.1):
         super().__init__()
@@ -145,7 +157,7 @@ if __name__ == "__main__":
     # Create causal mask: upper triangular matrix of zeros
     causal_mask = torch.tril(torch.ones(seq_len, seq_len)).unsqueeze(0).unsqueeze(0)
     # Shape: (1, 1, seq_len, seq_len)
-    
+    mha.eval()
     output_masked, attention_masked = mha(Q, K, V, mask=causal_mask)
     
     print(f"\nMasked output shape: {output_masked.shape}")
