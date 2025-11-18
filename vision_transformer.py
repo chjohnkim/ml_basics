@@ -27,14 +27,16 @@ class PositionalEncoding(nn.Module):
     self.max_seq_length = max_seq_length
     self.cls_token = nn.Parameter(torch.randn(1, 1, d_model))
 
-    self.pe = torch.zeros(1, max_seq_length, d_model)
+    pe = torch.zeros(1, max_seq_length, d_model)
     for pos in range(max_seq_length):
         for i in range(d_model):
             if i%2==0:
-                self.pe[:, pos, i] = np.sin(pos/(100000**(i/d_model)))
+                pe[:, pos, i] = np.sin(pos/(10000**(2*i/d_model)))
             else:
-                self.pe[:, pos, i] = np.cos(pos/(100000**((i-1)/d_model)))
-    
+                pe[:, pos, i] = np.cos(pos/(10000**(2*(i-1)/d_model)))
+    self.register_buffer('pe', pe)  # Register as buffer, not parameter
+
+
   def forward(self, x):
     cls_token = self.cls_token.expand(x.shape[0], -1, -1)
     x = torch.cat([cls_token, x], dim=1)
@@ -55,7 +57,7 @@ class AttentionHead(nn.Module):
         k = self.key(x)
         v = self.value(x)
 
-        attention = torch.matmul(q, k.transpose(-2, -1)) / self.head_size**2
+        attention = torch.matmul(q, k.transpose(-2, -1)) / self.head_size**0.5
         attention = torch.softmax(attention, dim=-1)
         attention = torch.matmul(attention, v)
         return attention
@@ -106,7 +108,7 @@ class ViT(nn.Module):
 
         self.classifier = nn.Sequential(
             nn.Linear(d_model, n_classes),
-            nn.Softmax(dim=-1)
+            #nn.Softmax(dim=-1)
         )
 
     def forward(self, x):
